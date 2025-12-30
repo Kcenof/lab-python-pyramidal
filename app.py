@@ -1,20 +1,15 @@
 def calculate_pyramidal_number(n):
     
     if n < 0:
-       
         raise ValueError("Число n не може бути меншим за 0!")
-    
     if n == 0:
         return 0
-
     pyramidal_sum = 0
     current_triangular = 0
-    
-    
+  
     for i in range(1, n + 1):
         current_triangular += i
-        pyramidal_sum += current_triangular
-        
+        pyramidal_sum += current_triangular    
     return pyramidal_sum
 
 if __name__ == "__main__":

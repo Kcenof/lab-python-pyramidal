@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // ЗАМІНИ НА СВІЙ ЛОГІН
-        IMAGE_NAME = 'skabserhii' 
+        IMAGE_NAME = 'skabserhii/Ecslab' 
         DOCKER_CREDS = 'dockerhub-creds'
     }
 

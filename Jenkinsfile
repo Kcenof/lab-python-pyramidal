@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'tviy_login/lab3-app'
-        DOCKER_CREDS = 'dockerhub-creds' 
+        // ЗАМІНИ НА СВІЙ ЛОГІН
+        IMAGE_NAME = 'skabserhii' 
+        DOCKER_CREDS = 'dockerhub-creds'
     }
 
     stages {
@@ -14,22 +15,19 @@ pipeline {
         }
 
         stage('Test') {
-            agent {
-                docker { 
-                    image 'python:3.9-alpine' 
-                    args '-u root' 
-                }
-            }
             steps {
-                sh 'pip install --no-cache-dir -r requirements.txt'
-                sh 'python -m unittest discover -p "test_*.py"'
+                script {
+                    echo 'Running tests inside Docker container...'
+                    bat 'docker run --rm -v "%CD%":/app -w /app python:3.9-alpine sh -c "pip install -r requirements.txt && python -m unittest discover -p test_*.py"'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${IMAGE_NAME}:latest")
+                    echo 'Building image...'
+                    bat "docker build -t ${IMAGE_NAME}:latest ."
                 }
             }
         }
@@ -37,9 +35,10 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('', DOCKER_CREDS) {
-                        dockerImage.push()
-                        dockerImage.push("${env.BUILD_NUMBER}")
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        bat "docker login -u %USER% -p %PASS%"
+                        bat "docker push ${IMAGE_NAME}:latest"
+                        bat "docker logout"
                     }
                 }
             }
@@ -47,8 +46,9 @@ pipeline {
         
         stage('Cleanup') {
             steps {
-                sh "docker rmi ${IMAGE_NAME}:latest || true"
-                sh "docker rmi ${IMAGE_NAME}:${env.BUILD_NUMBER} || true"
+                script {
+                    bat "docker rmi ${IMAGE_NAME}:latest || exit 0"
+                }
             }
         }
     }
